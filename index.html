@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=New+Tegomin&family=Playpen+Sans+Thai:wght@100..800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="size_web">
+
+        <header>
+            <h1>แสดงผลเซ็นเซอร์</h1>
+            <section class="head_status">
+
+                <div class="box online_status">
+                    🟢 กำลังออนไลน์: <span id="onlineCount">0</span> / 4 โซน
+                </div>
+                <div class="box time_status">
+                    <div>🕰️ <span id="clock">00:00:00</span></div>
+                </div>
+
+            </section>
+        </header>
+        <section class="sensornow">
+
+            <div class="card">
+                <div class="value"><span id="temp">--</span> °C</div>
+                <p>อุณหภูมิ</p>
+            </div>
+
+            <div class="card">
+                <div class="value"><span id="humidity">--</span> %</div>
+                <p>ความชื้น</p>
+            </div>
+            <div class="card">
+                <div class="value"><span id="light">--</span> %</div>
+                <p>แสง</p>
+            </div>
+        </section>
+
+        <section class="medime">
+
+            
+            <div class="container" id="zoneContainer">
+                <!-- โซนที่ 1 -->
+                <div class="card_zone" id="zone1">
+                    <div class="zone-title"><span class="status-dot"></span>โซนที่ 1</div>
+                    <div class="data-row">อุณหภูมิ: <span class="value_zone" id="t1">--</span> °C</div>
+                    <div class="data-row">ความชื้น: <span class="value_zone" id="h1">--</span> %</div>
+                </div>
+                <!-- โซนที่ 2 -->
+                <div class="card_zone" id="zone2">
+                    <div class="zone-title"><span class="status-dot"></span>โซนที่ 2</div>
+                    <div class="data-row">อุณหภูมิ: <span class="value_zone" id="t2">--</span> °C</div>
+                    <div class="data-row">ความชื้น: <span class="value_zone" id="h2">--</span> %</div>
+                </div>
+                <!-- โซนที่ 3 -->
+                <div class="card_zone" id="zone3">
+                    <div class="zone-title"><span class="status-dot"></span>โซนที่ 3</div>
+                    <div class="data-row">อุณหภูมิ: <span class="value_zone" id="t3">--</span> °C</div>
+                    <div class="data-row">ความชื้น: <span class="value_zone" id="h3">--</span> %</div>
+                </div>
+                <!-- โซนที่ 4 -->
+                <div class="card_zone" id="zone4">
+                    <div class="zone-title"><span class="status-dot"></span>โซนที่ 4</div>
+                    <div class="data-row">อุณหภูมิ: <span class="value_zone" id="t4">--</span> °C</div>
+                    <div class="data-row">ความชื้น: <span class="value_zone" id="h4">--</span> %</div>
+                </div>
+            </div>
+            <div class="history">
+                <p>บันทึกเหตุการณ์</p>
+                <div class="text_istory">
+                </div>
+            </div>
+        </section>
+        </div>
+    <script src="sensor.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
