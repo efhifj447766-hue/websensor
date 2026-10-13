@@ -48,31 +48,47 @@
 
         <section class="medime">
 
-            
+
             <div class="container" id="zoneContainer">
                 <!-- โซนที่ 1 -->
                 <div class="card_zone" id="zone1">
                     <div class="zone-title"><span class="status-dot"></span>โซนที่ 1</div>
-                    <div class="data-row">อุณหภูมิ: <span class="value_zone" id="t1">--</span> °C</div>
-                    <div class="data-row">ความชื้น: <span class="value_zone" id="h1">--</span> %</div>
+                    <div class="data-row">ความชื้นดิน: <span class="value_zone" id="m1">--</span> %</div>
+                    <div class="valve-row">
+                        <span class="valve-label">💧 วาล์วน้ำ: <b id="v1">ปิด</b></span>
+                        <button class="valve-btn" data-zone="1" role="switch" aria-checked="false"
+                            aria-label="วาล์วโซนที่ 1" disabled></button>
+                    </div>
                 </div>
                 <!-- โซนที่ 2 -->
                 <div class="card_zone" id="zone2">
                     <div class="zone-title"><span class="status-dot"></span>โซนที่ 2</div>
-                    <div class="data-row">อุณหภูมิ: <span class="value_zone" id="t2">--</span> °C</div>
-                    <div class="data-row">ความชื้น: <span class="value_zone" id="h2">--</span> %</div>
+                    <div class="data-row">ความชื้นดิน: <span class="value_zone" id="m2">--</span> %</div>
+                    <div class="valve-row">
+                        <span class="valve-label">💧 วาล์วน้ำ: <b id="v2">ปิด</b></span>
+                        <button class="valve-btn" data-zone="2" role="switch" aria-checked="false"
+                            aria-label="วาล์วโซนที่ 2" disabled></button>
+                    </div>
                 </div>
                 <!-- โซนที่ 3 -->
                 <div class="card_zone" id="zone3">
                     <div class="zone-title"><span class="status-dot"></span>โซนที่ 3</div>
-                    <div class="data-row">อุณหภูมิ: <span class="value_zone" id="t3">--</span> °C</div>
-                    <div class="data-row">ความชื้น: <span class="value_zone" id="h3">--</span> %</div>
+                    <div class="data-row">ความชื้นดิน: <span class="value_zone" id="m3">--</span> %</div>
+                    <div class="valve-row">
+                        <span class="valve-label">💧 วาล์วน้ำ: <b id="v3">ปิด</b></span>
+                        <button class="valve-btn" data-zone="3" role="switch" aria-checked="false"
+                            aria-label="วาล์วโซนที่ 3" disabled></button>
+                    </div>
                 </div>
                 <!-- โซนที่ 4 -->
                 <div class="card_zone" id="zone4">
                     <div class="zone-title"><span class="status-dot"></span>โซนที่ 4</div>
-                    <div class="data-row">อุณหภูมิ: <span class="value_zone" id="t4">--</span> °C</div>
-                    <div class="data-row">ความชื้น: <span class="value_zone" id="h4">--</span> %</div>
+                    <div class="data-row">ความชื้นดิน: <span class="value_zone" id="m4">--</span> %</div>
+                    <div class="valve-row">
+                        <span class="valve-label">💧 วาล์วน้ำ: <b id="v4">ปิด</b></span>
+                        <button class="valve-btn" data-zone="4" role="switch" aria-checked="false"
+                            aria-label="วาล์วโซนที่ 4" disabled></button>
+                    </div>
                 </div>
             </div>
             <div class="history">
@@ -81,7 +97,8 @@
                 </div>
             </div>
         </section>
-        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
     <script src="sensor.js"></script>
     <script src="script.js"></script>
 </body>

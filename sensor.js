@@ -1,121 +1,107 @@
-const esp32Url = "http://10.10.0.2/data"; // 🔴 เปลี่ยน IP นี้ให้ตรงกับ ESP32 ของคุณ
+const HOST = "m51f72c5.ala.asia-southeast1.emqxsl.com";
+const OFFLINE_MS = 30000;                       // ESP32 ส่งทุก 10 วิ
+const lastSeen = { 1: 0, 2: 0, 3: 0, 4: 0 };
+const valveOn = { 1: false, 2: false, 3: false, 4: false };
+let mainSeen = 0, mainOnline = false;
+const $ = id => document.getElementById(id);
+const pending = {};
 
-async function fetchSensorData() {
-    try {
-        let response = await fetch(esp32Url);
-        let data = await response.json();
+function setValveUI(z, on) {
+  valveOn[z] = on;
+  const b = document.querySelector(`.valve-btn[data-zone="${z}"]`);
+  if (b) {
+    b.classList.toggle("on", on);
+    b.classList.remove("pending");
+    b.setAttribute("aria-checked", on);
+  }
+  if ($("v" + z)) $("v" + z).innerText = on ? "เปิด" : "ปิด";
+  $("zone" + z)?.classList.toggle("watering", on);
+  clearTimeout(pending[z]);
+}
 
-        // นำค่ามาแสดงผลบนหน้าเว็บ
-        document.getElementById('temp').innerText = data.temperature;
-        document.getElementById('humidity').innerText = data.humidity;
-        document.getElementById('light').innerText = data.light;
-    } catch (error) {
-        console.error('ไม่สามารถเชื่อมต่อกับ ESP32 ได้:', error);
+function addLog(msg) {                          // เขียนลงกล่อง "บันทึกเหตุการณ์"
+  const box = document.querySelector(".text_istory");
+  if (!box) return;
+  const d = document.createElement("div");
+  d.textContent = new Date().toLocaleTimeString("th-TH") + " · " + msg;
+  box.prepend(d);
+  while (box.children.length > 30) box.lastChild.remove();
+}
+
+const client = mqtt.connect(`wss://${HOST}:8084/mqtt`, {
+  username: "web",
+  password: "ookdku2489zx",                  // อย่าวางรหัสจริงในแชต
+  clientId: "web-" + Math.random().toString(16).slice(2, 8),
+  reconnectPeriod: 3000,
+});
+
+client.on("connect", () => { addLog("✅ เชื่อมต่อ broker แล้ว"); client.subscribe("garden/#"); });
+client.on("error", e => addLog("❌ " + e.message));
+client.on("close", () => addLog("⚠️ หลุดการเชื่อมต่อ"));
+
+client.on("message", (topic, payload) => {
+  const v = payload.toString(), p = topic.split("/");
+
+  // ตัวหลัก / ESP32 (รองรับทั้ง garden/esp32/... และ garden/main/...)
+  if (p[1] === "main" || p[1] === "esp32") {
+    if (p[2] === "status") {
+      mainOnline = (v === "online");
+      addLog(mainOnline ? "📟 ESP32 ออนไลน์" : "📟 ESP32 ออฟไลน์");
     }
-}
-
-// ดึงข้อมูลอัตโนมัติทุกๆ 2 วินาที
-setInterval(fetchSensorData, 2000);
-
-// เรียกใช้งานทันทีเมื่อเปิดเว็บ
-fetchSensorData();
-
-const dataUrl = "https://webhook.site/your-unique-id-here";
-
-let lastDataTime = Date.now();
-
-async function fetchSensorData() {
-    try {
-        let response = await fetch(dataUrl);
-        let text = await response.text();
-
-        // สมมติข้อมูลที่ส่งมาเป็น JSON
-        // หมายเหตุ: สำหรับ Webhook.site จะดึง Request ล่าสุดมาแปลง
-        // หากใช้ Webhook.site อาจต้องปรับวิธีอ่านข้อมูลเล็กน้อยตามหน้าเว็บจริง
-
-        // สมมติว่าดึงข้อมูลสำเร็จและอัปเดตค่า:
-        // document.getElementById('temp').innerText = data.temperature;
-        // document.getElementById('humidity').innerText = data.humidity;
-
-        // อัปเดตเวลาล่าสุดที่ติดต่อได้
-        lastDataTime = Date.now();
-    } catch (error) {
-        console.error('Connection error:', error);
+    const map = { temp: "temp", humidity: "humidity", light: "light" };
+    if (map[p[2]] && $(map[p[2]])) {
+      $(map[p[2]]).innerText = parseFloat(v).toFixed(p[2] === "light" ? 0 : 1);
+      mainSeen = Date.now();
     }
-}
+    return;
+  }
 
-// ฟังก์ชันตรวจสอบสถานะทุกๆ 1 วินาที
-function checkConnectionStatus() {
-    let now = Date.now();
-    let statusBox = document.getElementById('statusIndicator');
+  const m = /^zone([1-4])$/.exec(p[1] || "");
+  if (!m) return;
+  const z = +m[1];
 
-    // ถ้าเวลาผ่านไปเกิน 6 วินาที โดยไม่มีข้อมูลเข้ามาใหม่ ถือว่าออฟไลน์
-    if (now - lastDataTime > 6000) {
-        statusBox.className = "status-box"; // สีแดง
-        statusBox.innerText = "🔴 อุปกรณ์ออฟไลน์ (Disconnected)";
-        document.getElementById('temp').innerText = "--";
-        document.getElementById('humidity').innerText = "--";
-    } else {
-        statusBox.className = "status-box online"; // สีเขียว
-        statusBox.innerText = "🟢 กำลังทำงาน (Online)";
-    }
-}
+  if (p[2] === "moisture") {
+    if ($("m" + z)) $("m" + z).innerText = Math.round(parseFloat(v));
+    lastSeen[z] = Date.now();
+  } else if (p[2] === "valve" && p[3] === "state") {
+    const on = (v === "ON");
+    if (on !== valveOn[z]) addLog((on ? "💦 วาล์วเปิด" : "🛑 วาล์วปิด") + " โซน " + z);
+    setValveUI(z, on);
+  }
+});
 
-// ดึงข้อมูลทุก 2 วินาที
-setInterval(fetchSensorData, 2000);
+// ปุ่มเปิด/ปิดวาล์ว (ส่งคำสั่ง แล้วรอ ESP32 รายงานสถานะกลับมาเปลี่ยนหน้าจอ)
+document.addEventListener("click", e => {
+  const b = e.target.closest(".valve-btn");
+  if (!b || b.classList.contains("pending")) return;
+  const z = +b.dataset.zone;
+  if (!client.connected) return addLog("⚠️ ยังไม่ได้เชื่อมต่อ broker");
 
-// เช็คสถานะการทำงานทุก 1 วินาที
-setInterval(checkConnectionStatus, 1000);
-const lastSeen = {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0
-};
+  const want = !valveOn[z];
+  b.classList.add("pending");
+  client.publish(`garden/zone${z}/valve/set`, want ? "ON" : "OFF", { qos: 1 });
+  addLog("📤 สั่ง" + (want ? "เปิด" : "ปิด") + "วาล์ว โซน " + z);
 
-// ฟังก์ชันจำลองการรับข้อมูล (สามารถเปลี่ยนไปดึงจาก API หรือ MQTT จริงได้ทีหลัง)
-async function fetchAllZonesData() {
-    // ตัวอย่างจำลอง: สมมติว่าดึงข้อมูลสำเร็จและระบุว่าโซน 1 กับโซน 3 ส่งค่าเข้ามา
-    // ในการใช้งานจริง คุณสามารถวนลูปดึงข้อมูลจาก Endpoint ของแต่ละโซน หรือผ่าน MQTT ได้
-    let currentTime = Date.now();
+  pending[z] = setTimeout(() => {           // ESP32 ไม่ตอบ
+    b.classList.remove("pending");
+    addLog("⏱️ โซน " + z + " ไม่ตอบกลับ ตรวจสอบ ESP32");
+  }, 6000);
+});
 
-    // --- [จำลองข้อมูลเข้า] สมมติให้โซน 1 และ 2 ส่งข้อมูลเข้ามาสดๆ ---
-    updateZoneData(1, 26.5, 60.2, currentTime);
-    updateZoneData(2, 28.1, 55.4, currentTime);
-    // โซน 3 และ 4 ปล่อยไว้ (จำลองว่าออฟไลน์อยู่)
-}
-
-function updateZoneData(zoneId, temp, humi, time) {
-    document.getElementById(`t${zoneId}`).innerText = temp;
-    document.getElementById(`h${zoneId}`).innerText = humi;
-    lastSeen[zoneId] = time; // บันทึกเวลาล่าสุดที่ได้รับข้อมูล
-}
-
-// เช็คสถานะออนไลน์/ออฟไลน์ทุกๆ 1 วินาที
 function checkStatus() {
-    let now = Date.now();
-    let activeCount = 0;
-
-    for (let i = 1; i <= 4; i++) {
-        let card = document.getElementById(`zone{i}`.replace('{i}', i)); // แก้ไขการเรียก ID
-
-        // ถ้าภายใน 6 วินาทีนี้ มีข้อมูลส่งมา ถือว่าออนไลน์
-        if (now - lastSeen[i] <= 6000) {
-            card.classList.add('online');
-            activeCount++;
-        } else {
-            card.classList.remove('online');
-            document.getElementById(`t${i}`).innerText = "--";
-            document.getElementById(`h${i}`).innerText = "--";
-        }
-    }
-
-    // แสดงจำนวนรวมที่ออนไลน์
-    document.getElementById('onlineCount').innerText = activeCount;
+  const now = Date.now();
+  let active = 0;
+  for (let i = 1; i <= 4; i++) {
+    const on = now - lastSeen[i] <= OFFLINE_MS;
+    $("zone" + i)?.classList.toggle("online", on);
+    if (on) active++;
+    else if ($("m" + i)) $("m" + i).innerText = "--";
+    const btn = document.querySelector(`.valve-btn[data-zone="${i}"]`);
+    if (btn) btn.disabled = !on || !client.connected;
+  }
+  if ($("onlineCount")) $("onlineCount").innerText = active;
+  if (now - mainSeen > OFFLINE_MS) {
+    ["temp", "humidity", "light"].forEach(k => { if ($(k)) $(k).innerText = "--"; });
+  }
 }
-
-// จำลองการดึงข้อมูลทุกๆ 2 วินาที
-setInterval(fetchAllZonesData, 2000);
-
-// ตรวจสอบสถานะและอัปเดตหน้าจอทุก 1 วินาที
 setInterval(checkStatus, 1000);

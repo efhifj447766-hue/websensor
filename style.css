@@ -209,12 +209,78 @@ header h2 {
     border-radius: 16px;
     padding: 16px;
     margin-top: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 .text_istory {
-    color: var(--text);
+  height: 220px;          /* ความสูงคงที่ ปรับตามชอบ */
+  overflow-y: auto;       /* เลื่อนดูเฉพาะในกล่องนี้ */
+  overflow-x: hidden;
+  overscroll-behavior: contain;   /* เลื่อนสุดแล้วไม่ดันทั้งหน้า */
+  padding: 8px;
+  font-size: 0.85rem;
+  line-height: 1.5;
 }
 
+.text_istory div {
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.15);
+  word-break: break-word;
+}
+.valve-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.15);
+}
+
+.valve-btn {
+  position: relative;
+  width: 58px;
+  height: 32px;
+  border: 0;
+  border-radius: 16px;
+  background: #b8c4bb;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.25s;
+}
+
+.valve-btn::after {                       /* ปุ่มกลมที่เลื่อน */
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s;
+}
+
+.valve-btn.on { background: #3b9cf0; }
+.valve-btn.on::after { transform: translateX(26px); }
+
+.valve-btn.pending {                      /* รอ ESP32 ตอบกลับ */
+  cursor: wait;
+  animation: valvePulse 0.9s ease-in-out infinite;
+}
+@keyframes valvePulse { 50% { opacity: 0.45; } }
+
+.valve-btn:disabled {                     /* ออฟไลน์ */
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.valve-btn:focus-visible { outline: 3px solid #f6b73c; outline-offset: 2px; }
+.valve-btn:active:not(:disabled)::after { width: 30px; }   /* กดแล้วปุ่มยืดนิดๆ */
+
+.card_zone.watering { box-shadow: 0 0 0 3px #3b9cf0; }
 /* ============ ใช้งานง่ายบนมือถือ ============ */
 @media (max-width: 700px) {
     header {
